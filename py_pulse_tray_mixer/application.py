@@ -24,8 +24,20 @@ class MixerWindow(QWidget):
 
     def reposition(self):
         pos = self.trayicon.getPos()
-        print(pos)
-        pass
+        iconRect = self.trayicon.geometry()
+        screenRect = QApplication.desktop().screenGeometry()
+        rect = self.rect()
+        if (pos & TrayIcon.Possition.RIGHT) > 0:
+            rect.setX(screenRect.width() - rect.right())
+        if (pos & TrayIcon.Possition.LEFT) > 0:
+            rect.setX(screenRect.left())
+
+        if (pos & TrayIcon.Possition.TOP) > 0:
+            rect.setY(screenRect.top() + iconRect.bottom())
+        if (pos & TrayIcon.Possition.BOTTOM) > 0:
+            rect.setY(screenRect.bottom() - iconRect.height())
+
+        self.move(rect.topLeft())
 
     def toggle(self):
         if self.isVisible(): self.hide()
@@ -40,6 +52,7 @@ class TrayIcon(QSystemTrayIcon):
         LEFT   = 2
         BOTTOM = 4
         RIGHT  = 8
+        MASK   = 16
 
     def __init__(self, parent=None):
         icon = QIcon(os.path.dirname(__file__) + '/../img/trayicon.png')
