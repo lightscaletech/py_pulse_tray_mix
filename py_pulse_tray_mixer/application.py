@@ -22,26 +22,32 @@ class MixerWindow(QWidget):
         self.trayicon = trayicon
         self.setWindowTitle("Mixer")
 
+    def resize(self):
+        self.setMaximumHeight(300)
+        self.setMinimumHeight(300)
+        self.updateGeometry()
+
     def reposition(self):
         pos = self.trayicon.getPos()
         iconRect = self.trayicon.geometry()
         screenRect = QApplication.desktop().screenGeometry()
         rect = self.rect()
         if (pos & TrayIcon.Possition.RIGHT) > 0:
-            rect.setX(screenRect.width() - rect.right())
+            rect.setX(screenRect.width() - rect.right() - 5)
         if (pos & TrayIcon.Possition.LEFT) > 0:
             rect.setX(screenRect.left())
 
         if (pos & TrayIcon.Possition.TOP) > 0:
             rect.setY(screenRect.top() + iconRect.bottom())
         if (pos & TrayIcon.Possition.BOTTOM) > 0:
-            rect.setY(screenRect.bottom() - iconRect.height())
+            rect.setY(screenRect.bottom() - iconRect.height() - rect.height() - 10)
 
         self.move(rect.topLeft())
 
     def toggle(self):
         if self.isVisible(): self.hide()
         else:
+            self.resize()
             self.reposition()
             self.show()
 
