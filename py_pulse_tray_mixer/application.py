@@ -2,7 +2,9 @@ import os
 from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
-                             QDesktopWidget)
+                             QDesktopWidget, QHBoxLayout)
+
+from py_pulse_tray_mixer import slider
 
 class Application(QApplication):
     def __init__(self, args):
@@ -21,6 +23,20 @@ class MixerWindow(QWidget):
         QWidget.__init__(self, parent, Qt.Qt.Dialog | Qt.Qt.FramelessWindowHint)
         self.trayicon = trayicon
         self.setWindowTitle("Mixer")
+
+        self.sinkLayout = QHBoxLayout()
+        self.sourceLayout = QHBoxLayout()
+
+        layout = QHBoxLayout()
+        layout.addLayout(self.sourceLayout)
+        layout.addLayout(self.sinkLayout)
+
+        self.setLayout(layout)
+
+        self.sourceLayout.addWidget(slider.Slider(self))
+
+        self.resize()
+        self.reposition()
 
     def resize(self):
         self.setMaximumHeight(300)
@@ -47,9 +63,9 @@ class MixerWindow(QWidget):
     def toggle(self):
         if self.isVisible(): self.hide()
         else:
+            self.show()
             self.resize()
             self.reposition()
-            self.show()
 
 class TrayIcon(QSystemTrayIcon):
 
