@@ -3,12 +3,13 @@ from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
                              QDesktopWidget, QHBoxLayout)
-
 from py_pulse_tray_mixer import slider
+from py_pulse_tray_mixer import pulseaudio
 
 class Application(QApplication):
     def __init__(self, args):
         QApplication.__init__(self, args)
+        pulseaudio.start()
         self.trayIcon = TrayIcon()
         self.mixWin = MixerWindow(self.trayIcon)
 
@@ -17,6 +18,7 @@ class Application(QApplication):
     def __del__(self):
         del self.trayIcon
         del self.mixWin
+        pulseaudio.stop()
 
 class MixerWindow(QWidget):
     def __init__(self, trayicon, parent=None):
@@ -61,8 +63,11 @@ class MixerWindow(QWidget):
         self.move(rect.topLeft())
 
     def toggle(self):
-        if self.isVisible(): self.hide()
+        if self.isVisible():
+            self.hide()
+            #pulseaudio.pause()
         else:
+            #pulseaudio.resume()
             self.show()
             self.resize()
             self.reposition()
