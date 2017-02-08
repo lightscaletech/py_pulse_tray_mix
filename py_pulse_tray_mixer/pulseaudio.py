@@ -28,7 +28,6 @@ def start():
 
     pa.pa_context_set_event_callback(_pa_ctx, _ctx_event, None)
     pa.pa_context_set_state_callback(_pa_ctx, _ctx_state, None)
-    pa.pa_context
 
 def stop():
     pa.pa_context_disconnect(_pa_ctx)
