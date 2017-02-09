@@ -9,9 +9,18 @@ from py_pulse_tray_mixer import pulse
 class Application(QApplication):
     def __init__(self, args):
         QApplication.__init__(self, args)
-        pulse.start()
+
         self.trayIcon = TrayIcon()
         self.mixWin = MixerWindow(self.trayIcon)
+
+        pulse.sink_manager.new = self.mixWin.sink_new
+        pulse.sink_manager.change = self.mixWin.sink_update
+        pulse.sink_manager.old = self.mixWin.sink_removed
+        pulse.input_manager.new = self.mixWin.input_new
+        pulse.input_manager.change = self.mixWin.input_update
+        pulse.input_manager.old = self.mixWin.input_removed
+
+        pulse.start()
 
         self.trayIcon.activated.connect(self.mixWin.toggle)
 
@@ -21,21 +30,23 @@ class Application(QApplication):
         pulse.stop()
 
 class MixerWindow(QWidget):
+
+    sinks = {}
+    inputs = {}
+
     def __init__(self, trayicon, parent=None):
         QWidget.__init__(self, parent, Qt.Qt.Dialog | Qt.Qt.FramelessWindowHint)
         self.trayicon = trayicon
         self.setWindowTitle("Mixer")
 
         self.sinkLayout = QHBoxLayout()
-        self.sourceLayout = QHBoxLayout()
+        self.inputLayout = QHBoxLayout()
 
         layout = QHBoxLayout()
-        layout.addLayout(self.sourceLayout)
+        layout.addLayout(self.inputLayout)
         layout.addLayout(self.sinkLayout)
 
         self.setLayout(layout)
-
-        self.sourceLayout.addWidget(slider.Slider(self))
 
         self.resize()
         self.reposition()
@@ -71,6 +82,27 @@ class MixerWindow(QWidget):
             self.show()
             self.resize()
             self.reposition()
+
+    def sink_new(self, item):
+        s = slider.Slider(self)
+        s.title.setText(item.name)
+        self.sinks[item.index] = s
+        self.inputLayout.addWidget(s)
+
+    def sink_update(self, item):
+        pass
+
+    def sink_removed(self, id):
+        pass
+
+    def input_new(self, item):
+        pass
+
+    def input_update(self, item):
+        pass
+
+    def input_removed(self, id):
+        pass
 
 class TrayIcon(QSystemTrayIcon):
 
