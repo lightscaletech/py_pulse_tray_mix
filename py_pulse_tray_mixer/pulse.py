@@ -6,11 +6,11 @@ class PObj(object):
         self.name = info.name.decode('utf-8')
         self.index = info.index
         self.cvolume = info.volume
-        self.volume = pa.pa_cvolume_max(self.cvolume)
+        self.volume = pa.pa_cvolume_avg(self.cvolume)
         self.proplist = info.proplist
-        self.print_proplist()
 
     def get_from_proplist(self, key):
+        key = c.c_char_p(key.encode('utf-8'))
         pa.pa_proplist_gets(self.proplist, key).decode('utf-8')
 
     def print_proplist(self):
@@ -68,8 +68,8 @@ class Manager(object):
         if self.old is not None: self.old(index)
 
 
-_sink_manager = Manager()
-_input_manager = Manager()
+sink_manager = Manager()
+input_manager = Manager()
 
 _pa_ml = None
 _pa_ctx = None
@@ -84,10 +84,10 @@ def _info_manage(t, manager, i):
     manager.upsert_item(t(info))
 
 def _sink_info(ctx, sink_info, eol, ud):
-    _info_manage(Sink, _sink_manager, sink_info)
+    _info_manage(Sink, sink_manager, sink_info)
 
 def _input_info(ctx, input_info, eol, ud):
-    _info_manage(Sink, _input_manager, input_info)
+    _info_manage(Sink, input_manager, input_info)
 
 def _ctx_sub_success(ctx, success, ud): pass
 
@@ -97,11 +97,11 @@ def _ctx_sub_cb(ctx, evt, eid, ud):
 
     if(evfac == pa.PA_SUBSCRIPTION_EVENT_SINK):
         if evtype == pa.PA_SUBSCRIPTION_EVENT_REMOVE:
-            _sink_manager.remove_item(eid)
+            sink_manager.remove_item(eid)
         else: _request_sink_state(ctx, eid, evtype)
     if(evfac == pa.PA_SUBSCRIPTION_EVENT_SINK_INPUT):
         if evtype == pa.PA_SUBSCRIPTION_EVENT_REMOVE:
-            _input_manager.remove_item(eid)
+            input_manager.remove_item(eid)
         else: _request_input_state(ctx, eid, evtype)
 
 def _ctx_event(ctx, name, prop_list, ud): print("Context event")
