@@ -1,22 +1,42 @@
 from py_pulse_tray_mixer import lib_pulseaudio as pa
 import ctypes as c
 
-class PObj(Object):
+class PObj(object):
     def __init__(self, info):
-        self.name = info.name.value.decode('utf-8')
-        self.index = info.index.value
-        self.volume = info.volume
+        self.name = info.name.decode('utf-8')
+        self.index = info.index
+        self.cvolume = info.volume
+        self.volume = pa.pa_cvolume_max(self.cvolume)
         self.proplist = info.proplist
+        self.print_proplist()
+
+    def get_from_proplist(self, key):
+        pa.pa_proplist_gets(self.proplist, key).decode('utf-8')
+
+    def print_proplist(self):
+        state = c.c_void_p(None)
+
+        print("------------------------------------------------")
+        while True:
+            k = pa.pa_proplist_iterate(self.proplist, c.pointer(state))
+            if k is None: break;
+            print("%s: %s" %
+                  (k.decode('utf-8'),
+                   pa.pa_proplist_gets(self.proplist, k).decode('utf-8')))
+        print("------------------------------------------------")
 
 class Sink(PObj):
     def __init__(self, info):
         PObj.__init__(self, info)
+        self.icon = self.get_from_proplist(pa.PA_PROP_DEVICE_ICON_NAME)
 
-class Source(PObj):
+class Input(PObj):
     def __init__(self, info):
         PObj.__init__(self, info)
+        self.name = self.get_from_proplist(pa.PA_PROP_APPLICATION_NAME)
+        self.icon = self.get_from_proplist(pa.PA_PROP_APPLICATION_ICON_NAME)
 
-class Manager(Object):
+class Manager(object):
     _items = {}
 
     change = None
@@ -28,55 +48,97 @@ class Manager(Object):
 
     def add_item(self, item):
         self._items[item.index] = item
-        if new is not None: new(item)
+        print ("Item added: " + str(item.index) + ', ' + item.name)
 
-    def remove_item(self, item):
-        del self._items[item.index]
-        if old is not None: old(item)
+        if self.new is not None: self.new(item)
 
     def changed_item(self, item):
-        if item.index in self._items: return self.add_item(item)
-        else: self._items[item.index] = item
-        if change is not None: change(item)
+        self._items[item.index] = item
+
+        if self.change is not None: self.change(item)
+
+    def upsert_item(self, item):
+        if item.index in self._items: self.changed_item(item)
+        else: self.add_item(item)
+
+    def remove_item(self, index):
+        print ("Item removed: %i" % index)
+        del self._items[index]
+
+        if self.old is not None: self.old(index)
+
+
+_sink_manager = Manager()
+_input_manager = Manager()
 
 _pa_ml = None
 _pa_ctx = None
 
-def _sink_info_list(ctx, sink_info, eol, ud):
-    print("sink info list")
-    print(sink_info)
+def _info_manage(t, manager, i):
+    info = None
+    try:
+        info = i.contents
+    except: pass
+    if info is None: return
+
+    manager.upsert_item(t(info))
 
 def _sink_info(ctx, sink_info, eol, ud):
-    print("Sink info")
+    _info_manage(Sink, _sink_manager, sink_info)
 
-def _request_sinks(ctx):
-    pa.pa_context_get_sink_info_list(ctx, _c_sink_info_list, None)
+def _input_info(ctx, input_info, eol, ud):
+    _info_manage(Sink, _input_manager, input_info)
 
-def _request_sink_state(ctx, id, event=None):
-    pa.pa_context_get_sink_info_by_index(ctx, id, _c_sink_info)
+def _ctx_sub_success(ctx, success, ud): pass
 
 def _ctx_sub_cb(ctx, evt, eid, ud):
-    print(evt)
-    pass
+    evtype = evt & pa.PA_SUBSCRIPTION_EVENT_TYPE_MASK
+    evfac = evt & pa.PA_SUBSCRIPTION_EVENT_FACILITY_MASK
 
-def _ctx_event(ctx, name, prop_list, ud):
-    print("Context event")
+    if(evfac == pa.PA_SUBSCRIPTION_EVENT_SINK):
+        if evtype == pa.PA_SUBSCRIPTION_EVENT_REMOVE:
+            _sink_manager.remove_item(eid)
+        else: _request_sink_state(ctx, eid, evtype)
+    if(evfac == pa.PA_SUBSCRIPTION_EVENT_SINK_INPUT):
+        if evtype == pa.PA_SUBSCRIPTION_EVENT_REMOVE:
+            _input_manager.remove_item(eid)
+        else: _request_input_state(ctx, eid, evtype)
+
+def _ctx_event(ctx, name, prop_list, ud): print("Context event")
 
 def _ctx_state(ctx, ud):
     state = pa.pa_context_get_state(ctx)
+
     if state == pa.PA_CONTEXT_READY:
-        print ("Ready!")
-        _request_sinks(ctx)
+        _request_sinks(ctx, pa.PA_SUBSCRIPTION_EVENT_NEW)
+        _request_inputs(ctx, pa.PA_SUBSCRIPTION_EVENT_NEW)
         pa.pa_context_set_subscribe_callback(ctx, _c_ctx_sub_cb ,None)
         pa.pa_context_subscribe(ctx,
-                                pa.PA_SUBSCRIPTION_MASK_ALL,
-                                None, None)
+                                pa.PA_SUBSCRIPTION_MASK_SINK |
+                                pa.PA_SUBSCRIPTION_MASK_SINK_INPUT,
+                                _c_ctx_sub_success, None)
+        print ("Ready!")
 
-_c_ctx_sub_cb     = pa.pa_context_subscribe_cb_t( _ctx_sub_cb )
-_c_ctx_state      = pa.pa_context_notify_cb_t( _ctx_state )
-_c_ctx_event      = pa.pa_context_event_cb_t( _ctx_event )
-_c_sink_info_list = pa.pa_sink_info_cb_t( _sink_info_list )
-_c_sink_info      = pa.pa_sink_info_cb_t( _sink_info )
+_c_ctx_sub_success = pa.pa_context_success_cb_t( _ctx_sub_success )
+_c_ctx_sub_cb      = pa.pa_context_subscribe_cb_t( _ctx_sub_cb )
+_c_ctx_state       = pa.pa_context_notify_cb_t( _ctx_state )
+_c_ctx_event       = pa.pa_context_event_cb_t( _ctx_event )
+_c_sink_info       = pa.pa_sink_info_cb_t( _sink_info )
+_c_input_info      = pa.pa_sink_input_info_cb_t( _input_info )
+
+
+def _request_sinks(ctx, event=None):
+    pa.pa_context_get_sink_info_list(ctx, _c_sink_info, event)
+
+def _request_sink_state(ctx, id, event=None):
+    pa.pa_context_get_sink_info_by_index(ctx, id, _c_sink_info, event)
+
+def _request_inputs(ctx, event=None):
+    pa.pa_context_get_sink_input_info_list(ctx, _c_input_info, event)
+
+def _request_input_state(ctx, id, event=None):
+    pa.pa_context_get_sink_input_info(ctx, id, _c_input_info, event)
+
 
 def pause(): pa.pa_threaded_mainloop_lock(_pa_ml)
 def resume(): pa.pa_threaded_mainloop_unlock(_pa_ml)
