@@ -113,14 +113,10 @@ class PulseMainloop(QObject):
         self.go.connect(self.worker.start)
         self.go.emit()
 
-
-
-
 class Pulse(QOject):
     sink_manager = Manager()
     input_manager = Manager()
 
-    _pa_ml = None
     _pa_ctx = None
 
     _c_ctx_sub_success = pa.pa_context_success_cb_t( self._ctx_sub_success )
@@ -139,9 +135,6 @@ class Pulse(QOject):
         if info is None: return
 
         manager.upsert_item(t(info))
-
-    def __init__(self, ml):
-        self._pa_ml = ml
 
     def _sink_info(self, ctx, sink_info, eol, ud):
         self._upsert_manage(Sink, sink_manager, sink_info)
@@ -191,22 +184,16 @@ class Pulse(QOject):
     def _request_input_state(self, ctx, id, event=None):
         pa.pa_context_get_sink_input_info(ctx, id, self._c_input_info, event)
 
-    def start(self):
-        self._pa_ml = pa.pa_threaded_mainloop_new()
-
-        ml_api = pa.pa_threaded_mainloop_get_api(self_pa_ml)
-        self._pa_ctx = pa.pa_context_new(ml_api, c.c_char_p(b'Py_tray_mixer'))
+    def __init__(self, ml):
+        self._pa_ctx = pa.pa_context_new(ml.get_api(), c.c_char_p(b'Py_tray_mixer'))
 
         rt = pa.pa_context_connect(self._pa_ctx, None, pa.PA_CONTEXT_NOFLAGS, None)
 
         rt = c.c_int()
-        pa.pa_threaded_mainloop_start(self._pa_ml)
 
         pa.pa_context_set_event_callback(self._pa_ctx, self._c_ctx_event, None)
         pa.pa_context_set_state_callback(self._pa_ctx, self._c_ctx_state, None)
 
 
-    def stop(self):
+    def _del__(self):
         pa.pa_context_disconnect(self._pa_ctx)
-        pa.pa_threaded_mainloop_stop(self._pa_ml)
-        pa.pa_threaded_mainloop_free(self._pa_ml)
