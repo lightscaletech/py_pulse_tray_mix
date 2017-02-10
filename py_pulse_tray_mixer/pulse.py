@@ -1,5 +1,5 @@
 from py_pulse_tray_mixer import lib_pulseaudio as pa
-from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QThread, QMutex, pyqtSignal, pyqtSlot
 import ctypes as c
 
 
@@ -74,18 +74,47 @@ class PulseMainloop(QObject):
     class Worker(QObject):
         def __init__(self, ml):
             self.ml
+            self.run = QMutex()
 
-        def loop(self):
-            pa.pa_mainloop_iterate(self.ml)
-            pass
+        def stop(self):
+            self.run.unlock()
+
+        @pyqtSlot()
+        def start(self):
+            self.run.lock()
+            ret = c.c_int(0)
+            while self.run.tryLock():
+                pa.pa_mainloop_iterate(self.ml, 1, c.pointer(ret))
+
+    go = pyqtSignal()
 
     def __init__(self):
         self.ml = pa.pa_mainloop_new()
+        self.worker = Worker(ml)
+        self.thread = None
 
+    def __del__(self):
+        self.stop()
+        del self.thread
+        del self.worker
+        pa.pa_mainloop_free(self.ml)
+
+    def get_api(self):
+        return pa.pa_mainloop_get_api(self.ml)
+
+    def stop(self):
+        self.worker.stop()
+        self.thread.quit()
+        self.thread.wait()
+
+    def start(self):
         self.thread = QThread()
-        self.worker = Worker()
         self.worker.moveToThread(self.thread)
-        self.thread.finished.connect(self.worker.deleteLater())
+        self.go.connect(self.worker.start)
+        self.go.emit()
+
+
+
 
 class Pulse(QOject):
     sink_manager = Manager()
