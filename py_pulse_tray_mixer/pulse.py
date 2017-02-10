@@ -111,6 +111,9 @@ class Pulse(QOject):
 
         manager.upsert_item(t(info))
 
+    def __init__(self, ml):
+        self._pa_ml = ml
+
     def _sink_info(self, ctx, sink_info, eol, ud):
         self._upsert_manage(Sink, sink_manager, sink_info)
 
@@ -158,10 +161,6 @@ class Pulse(QOject):
 
     def _request_input_state(self, ctx, id, event=None):
         pa.pa_context_get_sink_input_info(ctx, id, self._c_input_info, event)
-
-
-    def pause(self): pa.pa_threaded_mainloop_lock(self._pa_ml)
-    def resume(self): pa.pa_threaded_mainloop_unlock(self._pa_ml)
 
     def start(self):
         self._pa_ml = pa.pa_threaded_mainloop_new()
