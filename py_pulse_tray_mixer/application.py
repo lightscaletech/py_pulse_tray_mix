@@ -14,13 +14,6 @@ class Application(QApplication):
         self.pa_ml = pulse.PulseMainloop()
         self.pa = pulse.Pulse(self.pa_ml)
         self.mixWin = MixerWindow(self.trayIcon)
-
-        self.pa.sink_manager.new = self.mixWin.sink_new
-        self.pa.sink_manager.change = self.mixWin.sink_update
-        self.pa.sink_manager.old = self.mixWin.sink_removed
-        self.pa.input_manager.new = self.mixWin.input_new
-        self.pa.input_manager.change = self.mixWin.input_update
-        self.pa.input_manager.old = self.mixWin.input_removed
         self.pa.start()
 
         self.trayIcon.activated.connect(self.mixWin.toggle)
