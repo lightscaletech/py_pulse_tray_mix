@@ -11,23 +11,24 @@ class Application(QApplication):
         QApplication.__init__(self, args)
 
         self.trayIcon = TrayIcon()
+        self.pa_ml = pulse.PulseMainloop()
+        self.pa = pulse.Pulse(self.pa_ml)
         self.mixWin = MixerWindow(self.trayIcon)
 
-        pulse.sink_manager.new = self.mixWin.sink_new
-        pulse.sink_manager.change = self.mixWin.sink_update
-        pulse.sink_manager.old = self.mixWin.sink_removed
-        pulse.input_manager.new = self.mixWin.input_new
-        pulse.input_manager.change = self.mixWin.input_update
-        pulse.input_manager.old = self.mixWin.input_removed
-
-        pulse.start()
+        self.pa.sink_manager.new = self.mixWin.sink_new
+        self.pa.sink_manager.change = self.mixWin.sink_update
+        self.pa.sink_manager.old = self.mixWin.sink_removed
+        self.pa.input_manager.new = self.mixWin.input_new
+        self.pa.input_manager.change = self.mixWin.input_update
+        self.pa.input_manager.old = self.mixWin.input_removed
+        self.pa.start()
 
         self.trayIcon.activated.connect(self.mixWin.toggle)
 
     def __del__(self):
         del self.trayIcon
         del self.mixWin
-        pulse.stop()
+        self.pa.stop()
 
 class MixerWindow(QWidget):
 
@@ -76,9 +77,7 @@ class MixerWindow(QWidget):
     def toggle(self):
         if self.isVisible():
             self.hide()
-            #pulseaudio.pause()
         else:
-            #pulseaudio.resume()
             self.show()
             self.resize()
             self.reposition()
