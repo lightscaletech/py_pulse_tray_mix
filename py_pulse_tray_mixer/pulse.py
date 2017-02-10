@@ -1,5 +1,7 @@
 from py_pulse_tray_mixer import lib_pulseaudio as pa
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 import ctypes as c
+
 
 class PObj(object):
     def __init__(self, info):
@@ -67,6 +69,23 @@ class Manager(object):
 
         if self.old is not None: self.old(index)
 
+class PulseMainloop(QObject):
+
+    class Worker(QObject):
+        def __init__(self, ml):
+            self.ml
+
+        def loop(self):
+            pa.pa_mainloop_iterate(self.ml)
+            pass
+
+    def __init__(self):
+        self.ml = pa.pa_mainloop_new()
+
+        self.thread = QThread()
+        self.worker = Worker()
+        self.worker.moveToThread(self.thread)
+        self.thread.finished.connect(self.worker.deleteLater())
 
 class Pulse(QOject):
     sink_manager = Manager()
