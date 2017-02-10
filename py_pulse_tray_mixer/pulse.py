@@ -41,23 +41,12 @@ class Input(PObj):
 class Manager(object):
     _items = {}
 
-    change = None
-    new = None
-    old = None
-
-    def __init__(self):
-        pass
-
     def add_item(self, item):
         self._items[item.index] = item
         print ("Item added: " + str(item.index) + ', ' + item.name)
 
-        if self.new is not None: self.new(item)
-
     def changed_item(self, item):
         self._items[item.index] = item
-
-        if self.change is not None: self.change(item)
 
     def upsert_item(self, item):
         if item.index in self._items: self.changed_item(item)
@@ -66,8 +55,6 @@ class Manager(object):
     def remove_item(self, index):
         print ("Item removed: %i" % index)
         del self._items[index]
-
-        if self.old is not None: self.old(index)
 
 class PulseMainloop(QObject):
 
