@@ -11,27 +11,36 @@ class Application(QApplication):
         QApplication.__init__(self, args)
 
         self.trayIcon = TrayIcon()
-        self.pa_ml = pulse.PulseMainloop()
-        self.pa = pulse.Pulse(self.pa_ml)
-        self.mixWin = MixerWindow(self.trayIcon)
-        self.pa.start()
+        self.paMl = pulse.PulseMainloop(self)
+        self.pa = pulse.Pulse(self.paMl)
+        self.mixWin = MixerWindow(self.paMl, self.pa, self.trayIcon)
 
         self.trayIcon.activated.connect(self.mixWin.toggle)
 
     def __del__(self):
-        del self.trayIcon
+        self.paMl.stop()
         del self.mixWin
-        self.pa.stop()
+        del self.trayIcon
+
 
 class MixerWindow(QWidget):
 
     sinks = {}
     inputs = {}
 
-    def __init__(self, trayicon, parent=None):
+    def __init__(self, ml, pa, trayicon, parent=None):
         QWidget.__init__(self, parent, Qt.Qt.Dialog | Qt.Qt.FramelessWindowHint)
         self.trayicon = trayicon
+        self.ml = ml
         self.setWindowTitle("Mixer")
+
+        pa.input_manager.added.connect(self.input_new)
+        pa.input_manager.changed.connect(self.input_update)
+        pa.input_manager.removed.connect(self.input_removed)
+
+        pa.sink_manager.added.connect(self.sink_new)
+        pa.sink_manager.changed.connect(self.sink_update)
+        pa.sink_manager.removed.connect(self.sink_removed)
 
         self.sinkLayout = QHBoxLayout()
         self.inputLayout = QHBoxLayout()
@@ -42,6 +51,9 @@ class MixerWindow(QWidget):
 
         self.setLayout(layout)
 
+        self.redoGeom()
+
+    def redoGeom(self):
         self.resize()
         self.reposition()
 
@@ -70,31 +82,37 @@ class MixerWindow(QWidget):
     def toggle(self):
         if self.isVisible():
             self.hide()
+            self.ml.stop()
         else:
+            self.ml.start()
             self.show()
-            self.resize()
-            self.reposition()
+            self.redoGeom()
 
     def sink_new(self, item):
         s = slider.Slider(self)
-        s.title.setText(item.name)
+        s.shown.connect(self.redoGeom)
+        s.title.setText(item.title)
         self.sinks[item.index] = s
-        self.inputLayout.addWidget(s)
+        self.sinkLayout.addWidget(s)
 
     def sink_update(self, item):
         pass
 
     def sink_removed(self, id):
-        pass
+        del self.sinks[id]
 
     def input_new(self, item):
-        pass
+        s = slider.Slider(self)
+        s.title.setText(item.name)
+        self.inputs[item.index] = s
+        self.inputLayout.addWidget(s)
+        self.redoGeom()
 
     def input_update(self, item):
         pass
 
     def input_removed(self, id):
-        pass
+        del self.inputs[id]
 
 class TrayIcon(QSystemTrayIcon):
 
