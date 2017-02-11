@@ -1,8 +1,11 @@
 from PyQt5.Qt import Qt
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QLabel, QSlider, QPushButton,
                              QHBoxLayout, QVBoxLayout)
 
 class Slider(QWidget):
+
+    shown = pyqtSignal()
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -22,3 +25,6 @@ class Slider(QWidget):
 
         layout.addLayout(botLayout)
         self.setLayout(layout)
+
+    def showEvent(self, event):
+        self.shown.emit()
