@@ -39,7 +39,7 @@ class Sink(PObj):
 class Input(PObj):
     def __init__(self, info):
         PObj.__init__(self, info)
-        self.name = self.get_from_proplist(pa.PA_PROP_APPLICATION_NAME)
+        self.title = self.get_from_proplist(pa.PA_PROP_APPLICATION_NAME)
         self.icon = self.get_from_proplist(pa.PA_PROP_APPLICATION_ICON_NAME)
 
 class Manager(QObject):
