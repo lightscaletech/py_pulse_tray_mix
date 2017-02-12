@@ -36,6 +36,7 @@ class MixerWindow(QWidget):
         self.setWindowTitle("Mixer")
         self.icoFinder = icon.IconFinder([icon.CONTEXT_APPLICATION,
                                           icon.CONTEXT_DEVICE])
+        self.icoFinder.find_icon(icon.CONTEXT_APPLICATION, "chromium")
 
         pa.input_manager.added.connect(self.input_new)
         pa.input_manager.changed.connect(self.input_update)
