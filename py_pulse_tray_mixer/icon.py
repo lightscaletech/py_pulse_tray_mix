@@ -13,6 +13,9 @@ usr_icon_path = home_dir + '/.icons/'
 class Icon(object):
     pass
 
+class ThemeNotFound(Exception):
+    pass
+
 class GtkIconTheme(object):
 
     inherits = None
@@ -24,25 +27,35 @@ class GtkIconTheme(object):
             self.context = config.get(name, 'Context')
             self.size = config.getint(name, 'Size')
 
+        def __repr__(self):
+            return 'GtkIconTheme.Directory<uri=%s>' % self.uri
 
     def __init__(self, name, context=None):
-        self.path = self.find_theme(name)
+        self.name = name
+        self.path = self.find_theme(self.name)
+        if self.path is None: raise ThemeNotFound()
         config = configparser.ConfigParser()
         config.read(self.path + '/index.theme')
-        inherits = config.get('Icon Theme', 'Inherits')
-        if inherits is not None: self.inherits = inherits.split(',')
+
+        if config.has_option('Icon Theme', 'Inherits'):
+            self.inherits = config.get('Icon Theme', 'Inherits').split(',')
 
         self.load_directories(config, context)
+
+    def __repr__(self):
+        return 'GtkIconTheme<name=%s>' % self.name
+    def __str__(self):
+        return self.name
 
     def load_directories(self, config, context):
         dstr = config.get('Icon Theme', 'Directories')
         dlist = dstr.split(',')
         for d in dlist:
-            direc = Directory(config, d)
+            direc = self.Directory(config, d)
             if direc.context in context: self.directories.append(direc)
             elif context is None: self.directories.append(direc)
 
-        self.directories.sort(key = lambda d: d.size)
+        self.directories.sort(key = lambda d: d.size, reverse=True)
 
     def try_dir(self, p):
         return path.isdir(p)
@@ -52,7 +65,7 @@ class GtkIconTheme(object):
         if self.try_dir(p): return p
         p = sys_icon_path + name
         if self.try_dir(p): return p
-        print (p)
+        print(p)
 
 class IconFinder(object):
 
@@ -62,11 +75,18 @@ class IconFinder(object):
 
     def __init__(self, context=None):
         self.theme_name = self.get_current_theme()
-
+        self.load_theme(self.theme_name, context)
 
     def load_theme(self, name, context):
-        pass
+        try:
+            theme = GtkIconTheme(name, context)
+            self.themes.append(theme)
 
+            if theme.inherits is not None:
+                for n in theme.inherits:
+                    self.load_theme(n, context)
+
+        except ThemeNotFound as err: pass
 
     def get_current_theme(self):
         settings = configparser.ConfigParser()
