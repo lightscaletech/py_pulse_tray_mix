@@ -22,7 +22,8 @@ class GtkIconTheme(object):
         def __init__(self, config, name):
             self.uri = name
             self.context = config.get(name, 'Context')
-            self.size = config.get(name, 'Size')
+            self.size = config.getint(name, 'Size')
+
 
     def __init__(self, name, fallback, context=None):
         self.path = self.find_theme(name)
@@ -34,6 +35,8 @@ class GtkIconTheme(object):
         elif fallback is not None:
             self.inherits = GtkIconTheme(fallback, None, context)
 
+        self.load_directories(config, context)
+
     def load_directories(self, config, context):
         dstr = config.get('Icon Theme', 'Directories')
         dlist = dstr.split(',')
@@ -41,6 +44,8 @@ class GtkIconTheme(object):
             direc = Directory(config, d)
             if direc.context in context: self.directories.append(direc)
             elif context is None: self.directories.append(direc)
+
+        self.directories.sort(key = lambda d: d.size)
 
     def try_dir(self, path):
         return path.isdir(path)
@@ -55,10 +60,9 @@ class IconFinder(object):
 
     gtk3_setting = '~/.config/gtk-3.0/settings.ini'
 
-    def __init__(self):
+    def __init__(self, context=None):
         self.theme_name = self.get_current_theme()
-        self.theme = GtkIconTheme(self.theme_name, 'hicolor',
-                                  [CONTEXT_APPLICATION, CONTEXT_DEVICE])
+        self.theme = GtkIconTheme(self.theme_name, 'hicolor', context)
 
     def get_current_theme(self):
         settings = configparser.ConfigParser()
