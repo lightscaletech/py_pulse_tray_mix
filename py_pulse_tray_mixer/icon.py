@@ -26,6 +26,7 @@ class GtkIconTheme(object):
             self.uri = name
             self.context = config.get(name, 'Context')
             self.size = config.getint(name, 'Size')
+            self.type = config.get(name, 'Type')
 
         def __repr__(self):
             return 'GtkIconTheme.Directory<uri=%s>' % self.uri
@@ -65,7 +66,12 @@ class GtkIconTheme(object):
         if self.try_dir(p): return p
         p = sys_icon_path + name
         if self.try_dir(p): return p
-        print(p)
+
+    def find_icon(self, ctx, name):
+        print(self.name)
+        print(self.directories)
+        dirs = [d for d in self.directories
+                if d.context == ctx and d.type != 'scalable']
 
 class IconFinder(object):
 
@@ -102,5 +108,5 @@ class IconFinder(object):
     def walk_icon_themes(self):
         pass
 
-    def find_icon(self, type, name):
-        pass
+    def find_icon(self, ctx, name):
+        self.themes[0].find_icon(ctx, name)
