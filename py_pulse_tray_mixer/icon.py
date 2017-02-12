@@ -6,9 +6,9 @@ CONTEXT_APPLICATION = 'Apps'
 CONTEXT_DEVICE      = 'Devices'
 CONTEXT_ACTION      = 'Actions'
 
-
+home_dir = path.expanduser('~')
 sys_icon_path = '/usr/share/icons/'
-usr_icon_path = '~/.icons/'
+usr_icon_path = home_dir + '/.icons/'
 
 class Icon(object):
     pass
@@ -25,15 +25,12 @@ class GtkIconTheme(object):
             self.size = config.getint(name, 'Size')
 
 
-    def __init__(self, name, fallback, context=None):
+    def __init__(self, name, context=None):
         self.path = self.find_theme(name)
         config = configparser.ConfigParser()
-        config.read(path)
+        config.read(self.path + '/index.theme')
         inherits = config.get('Icon Theme', 'Inherits')
-        if inherits is not None:
-            self.inherits = GtkIconTheme(inherits, fallback, context)
-        elif fallback is not None:
-            self.inherits = GtkIconTheme(fallback, None, context)
+        if inherits is not None: self.inherits = inherits.split(',')
 
         self.load_directories(config, context)
 
@@ -47,27 +44,34 @@ class GtkIconTheme(object):
 
         self.directories.sort(key = lambda d: d.size)
 
-    def try_dir(self, path):
-        return path.isdir(path)
+    def try_dir(self, p):
+        return path.isdir(p)
 
     def find_theme(self, name):
-        path = usr_icon_path + name
-        if try_dir(path): return path
-        path = sys_icon_path + name
-        if try_dir(path): return path
+        p = usr_icon_path + name
+        if self.try_dir(p): return p
+        p = sys_icon_path + name
+        if self.try_dir(p): return p
+        print (p)
 
 class IconFinder(object):
 
-    gtk3_setting = '~/.config/gtk-3.0/settings.ini'
+    gtk3_setting = home_dir + '/.config/gtk-3.0/settings.ini'
+
+    themes = []
 
     def __init__(self, context=None):
         self.theme_name = self.get_current_theme()
-        self.theme = GtkIconTheme(self.theme_name, 'hicolor', context)
+
+
+    def load_theme(self, name, context):
+        pass
+
 
     def get_current_theme(self):
         settings = configparser.ConfigParser()
         settings.read(self.gtk3_setting)
-        settings.get('Settings', 'gtk-icon-theme-name')
+        return settings.get('Settings', 'gtk-icon-theme-name')
 
     def walk_icon_folder(self, path, name):
         pass
