@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
                              QDesktopWidget, QHBoxLayout)
 from py_pulse_tray_mixer import slider
 from py_pulse_tray_mixer import pulse
+from py_pulse_tray_mixer import icon
 
 class Application(QApplication):
     def __init__(self, args):
@@ -33,6 +34,8 @@ class MixerWindow(QWidget):
         self.trayicon = trayicon
         self.ml = ml
         self.setWindowTitle("Mixer")
+        self.icoFinder = icon.IconFinder([icon.CONTEXT_APPLICATION,
+                                          icon.CONTEXT_DEVICE])
 
         pa.input_manager.added.connect(self.input_new)
         pa.input_manager.changed.connect(self.input_update)
