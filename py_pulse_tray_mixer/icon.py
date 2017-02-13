@@ -1,12 +1,13 @@
-from os import path
+import os
 import configparser
+import re
 
 
 CONTEXT_APPLICATION = 'Apps'
 CONTEXT_DEVICE      = 'Devices'
 CONTEXT_ACTION      = 'Actions'
 
-home_dir = path.expanduser('~')
+home_dir = os.path.expanduser('~')
 sys_icon_path = '/usr/share/icons/'
 usr_icon_path = home_dir + '/.icons/'
 
@@ -51,15 +52,17 @@ class GtkIconTheme(object):
     def load_directories(self, config, context):
         dstr = config.get('Icon Theme', 'Directories')
         dlist = dstr.split(',')
+        directories = []
         for d in dlist:
             direc = self.Directory(config, d)
-            if direc.context in context: self.directories.append(direc)
-            elif context is None: self.directories.append(direc)
+            if direc.context in context: directories.append(direc)
+            elif context is None: directories.append(direc)
 
-        self.directories.sort(key = lambda d: d.size, reverse=True)
+        directories.sort(key = lambda d: d.size, reverse=True)
+        self.directories = directories
 
     def try_dir(self, p):
-        return path.isdir(p)
+        return os.path.isdir(p)
 
     def find_theme(self, name):
         p = usr_icon_path + name
@@ -67,11 +70,20 @@ class GtkIconTheme(object):
         p = sys_icon_path + name
         if self.try_dir(p): return p
 
+    def walk_dir(self, idir, name):
+        (dname, subs, files) = next(os.walk(idir))
+        cre = re.compile("(.*)\..{2,4}")
+        for f in files:
+            fmatch = cre.match(f)
+            if(name == fmatch.group(1)):
+                return idir + '/' + f
+
     def find_icon(self, ctx, name):
-        print(self.name)
-        print(self.directories)
         dirs = [d for d in self.directories
-                if d.context == ctx and d.type != 'scalable']
+                if (d.context == ctx and d.type != 'Scalable')]
+        for d in dirs:
+            f = self.walk_dir("%s/%s" % (self.path, d.uri), name)
+            if f: return f
 
 class IconFinder(object):
 
@@ -99,14 +111,7 @@ class IconFinder(object):
         settings.read(self.gtk3_setting)
         return settings.get('Settings', 'gtk-icon-theme-name')
 
-    def walk_icon_folder(self, path, name):
-        pass
-
-    def walk_icon_sizes(self, path, name):
-        pass
-
-    def walk_icon_themes(self):
-        pass
-
     def find_icon(self, ctx, name):
-        self.themes[0].find_icon(ctx, name)
+        for t in self.themes:
+            f = t.find_icon(ctx, name)
+            if f: return f
