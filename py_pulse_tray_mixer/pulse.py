@@ -157,7 +157,7 @@ class Pulse(QObject):
         self._upsert_manage(Sink, self.sink_manager, sink_info)
 
     def _input_info(self, ctx, input_info, eol, ud):
-        self._upsert_manage(Sink, self.input_manager, input_info)
+        self._upsert_manage(Input, self.input_manager, input_info)
 
     def _ctx_sub_success(self, ctx, success, ud): pass
 
