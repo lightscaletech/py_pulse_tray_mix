@@ -103,6 +103,7 @@ class MixerWindow(QWidget):
         s.shown.connect(self.redoGeom)
         s.title.setText(item.title)
         s.control.setValue(item.volume)
+        s.muteBtn.setChecked(item.mute)
         icoPath = self.icoFinder.find_icon(iconCtx, item.icon)
         if icoPath is None:
             icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
@@ -120,7 +121,6 @@ class MixerWindow(QWidget):
 
     def sink_new(self, item):
         self.new_item(self.sinks, self.sinkLayout, item, icon.CONTEXT_DEVICE)
-
 
     def sink_update(self, item):
         pass
