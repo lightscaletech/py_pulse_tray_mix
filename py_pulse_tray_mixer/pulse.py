@@ -14,6 +14,7 @@ class PObj(QObject):
         self.cvolume = info.volume
         self.volume = pa.pa_cvolume_avg(self.cvolume)
         self.proplist = info.proplist
+        self.mute = bool(info.mute)
 
     def get_from_proplist(self, key):
         key = c.c_char_p(key.encode('latin-1'))
