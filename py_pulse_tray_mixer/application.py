@@ -98,45 +98,43 @@ class MixerWindow(QWidget):
             self.show()
             self.redoGeom()
 
-    def sink_new(self, item):
+    def new_item(self, container, layout, item, iconCtx):
         s = slider.Slider(self)
         s.shown.connect(self.redoGeom)
-        icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, item.icon)
+        icoPath = self.icoFinder.find_icon(iconCtx, item.icon)
         if icoPath is None:
             icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
         s.setIcon(icoPath)
         s.title.setText(item.title)
-        self.sinks[item.index] = s
-        self.sinkLayout.addWidget(s)
+        container[item.index] = s
+        layout.addWidget(s)
+
+    def remove_item(self, container, layout, index):
+        inp = container[index]
+        res = self.inputLayout.removeWidget(inp)
+        sip.delete(inp)
+        del container[index]
+        self.redoGeom()
+
+    def sink_new(self, item):
+        self.new_item(self.sinks, self.sinkLayout, item, icon.CONTEXT_DEVICE)
+
 
     def sink_update(self, item):
         pass
 
     def sink_removed(self, id):
-        del self.sinks[id]
+        self.remove_item(self.sinks, self.sinkLayout, index)
 
     def input_new(self, item):
-        s = slider.Slider(self)
-        s.shown.connect(self.redoGeom)
-        s.title.setText(item.name)
-        icoPath = self.icoFinder.find_icon(icon.CONTEXT_APPLICATION, item.icon)
-        if icoPath is None:
-            icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
-        s.setIcon(icoPath)
-        self.inputs[item.index] = s
-        self.inputLayout.addWidget(s)
-        self.redoGeom()
+        self.new_item(self.inputs, self.inputLayout, item,
+                      icon.CONTEXT_APPLICATION)
 
     def input_update(self, item):
         pass
 
-    def input_removed(self, id):
-        #print("Input removed")
-        inp = self.inputs[id]
-        res = self.inputLayout.removeWidget(inp)
-        sip.delete(inp)
-        del self.inputs[id]
-        self.redoGeom()
+    def input_removed(self, index):
+        self.remove_item(self.inputs, self.inputLayout, index)
 
 class TrayIcon(QSystemTrayIcon):
 
