@@ -16,6 +16,7 @@ class Slider(QWidget):
         self.title = QLabel('Title', self)
         self.muteBtn = QPushButton('M', self)
         self.muteBtn.setMaximumWidth(20)
+        self.muteBtn.setCheckable(True)
 
         layout = QVBoxLayout()
         layout.addWidget(self.icon)
