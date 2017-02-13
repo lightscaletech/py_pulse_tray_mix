@@ -36,7 +36,6 @@ class MixerWindow(QWidget):
         self.setWindowTitle("Mixer")
         self.icoFinder = icon.IconFinder([icon.CONTEXT_APPLICATION,
                                           icon.CONTEXT_DEVICE])
-        self.icoFinder.find_icon(icon.CONTEXT_APPLICATION, "chromium")
 
         pa.input_manager.added.connect(self.input_new)
         pa.input_manager.changed.connect(self.input_update)
@@ -95,6 +94,11 @@ class MixerWindow(QWidget):
     def sink_new(self, item):
         s = slider.Slider(self)
         s.shown.connect(self.redoGeom)
+        icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, item.icon)
+        print(icoPath)
+        if icoPath is None:
+            icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
+        s.setIcon(icoPath)
         s.title.setText(item.title)
         self.sinks[item.index] = s
         self.sinkLayout.addWidget(s)
@@ -108,6 +112,10 @@ class MixerWindow(QWidget):
     def input_new(self, item):
         s = slider.Slider(self)
         s.title.setText(item.name)
+        icoPath = self.icoFinder.find_icon(icon.CONTEXT_APPLICATION, item.icon)
+        if icoPath is None:
+            icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
+        s.setIcon(icoPath)
         self.inputs[item.index] = s
         self.inputLayout.addWidget(s)
         self.redoGeom()
