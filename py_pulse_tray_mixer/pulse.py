@@ -2,8 +2,8 @@ from py_pulse_tray_mixer import lib_pulseaudio as pa
 from PyQt5.QtCore import QThread, QMutex, QObject, pyqtSignal, pyqtSlot
 import ctypes as c
 
-VOLUME_MIN = pa.PA_VOLUME_MUTED
-VOLUME_NORM = pa.PA_VOLUME_NORM
+VOLUME_MIN = pa.PA_VOLUME_MUTED.value
+VOLUME_NORM = pa.PA_VOLUME_NORM.value
 
 class PObj(QObject):
     def __init__(self, info):
