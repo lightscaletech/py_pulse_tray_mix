@@ -119,11 +119,14 @@ class MixerWindow(QWidget):
         del container[index]
         self.redoGeom()
 
+    def update_item(self, container, item):
+        container[item.index].control.setValue(item.volume)
+        container[item.index].muteBtn.setChecked(item.mute)
+
     def sink_new(self, item):
         self.new_item(self.sinks, self.sinkLayout, item, icon.CONTEXT_DEVICE)
 
-    def sink_update(self, item):
-        pass
+    def sink_update(self, item): self.update_item(self.sinks, item)
 
     def sink_removed(self, id):
         self.remove_item(self.sinks, self.sinkLayout, index)
@@ -132,8 +135,7 @@ class MixerWindow(QWidget):
         self.new_item(self.inputs, self.inputLayout, item,
                       icon.CONTEXT_APPLICATION)
 
-    def input_update(self, item):
-        pass
+    def input_update(self, item): self.update_item(self.inputs, item)
 
     def input_removed(self, index):
         self.remove_item(self.inputs, self.inputLayout, index)
