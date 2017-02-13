@@ -29,6 +29,7 @@ class Slider(QWidget):
 
     def setIcon(self, p):
         pix = QPixmap(p)
+        pix = pix.scaledToWidth(38)
         self.icon.setPixmap(pix)
 
     def showEvent(self, event):
