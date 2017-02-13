@@ -35,6 +35,8 @@ class Sink(PObj):
         PObj.__init__(self, info)
         self.icon = self.get_from_proplist(pa.PA_PROP_DEVICE_ICON_NAME)
         self.title = self.get_from_proplist(u'alsa.card_name')
+        if not self.title:
+            self.title = info.name.decode('utf-8')
 
 class Input(PObj):
     def __init__(self, info):
