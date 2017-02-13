@@ -95,7 +95,6 @@ class MixerWindow(QWidget):
         s = slider.Slider(self)
         s.shown.connect(self.redoGeom)
         icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, item.icon)
-        print(icoPath)
         if icoPath is None:
             icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
         s.setIcon(icoPath)
