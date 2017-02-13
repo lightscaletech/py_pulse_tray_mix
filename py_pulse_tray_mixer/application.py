@@ -1,4 +1,5 @@
 import os
+import sip
 from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
@@ -37,13 +38,14 @@ class MixerWindow(QWidget):
         self.icoFinder = icon.IconFinder([icon.CONTEXT_APPLICATION,
                                           icon.CONTEXT_DEVICE])
 
-        pa.input_manager.added.connect(self.input_new)
-        pa.input_manager.changed.connect(self.input_update)
-        pa.input_manager.removed.connect(self.input_removed)
+        contype = Qt.Qt.BlockingQueuedConnection
+        pa.input_manager.added.connect(self.input_new, type=contype)
+        pa.input_manager.changed.connect(self.input_update, type=contype)
+        pa.input_manager.removed.connect(self.input_removed, type=contype)
 
-        pa.sink_manager.added.connect(self.sink_new)
-        pa.sink_manager.changed.connect(self.sink_update)
-        pa.sink_manager.removed.connect(self.sink_removed)
+        pa.sink_manager.added.connect(self.sink_new, type=contype)
+        pa.sink_manager.changed.connect(self.sink_update, type=contype)
+        pa.sink_manager.removed.connect(self.sink_removed, type=contype)
 
         self.sinkLayout = QHBoxLayout()
         self.inputLayout = QHBoxLayout()
@@ -110,6 +112,7 @@ class MixerWindow(QWidget):
 
     def input_new(self, item):
         s = slider.Slider(self)
+        s.shown.connect(self.redoGeom)
         s.title.setText(item.name)
         icoPath = self.icoFinder.find_icon(icon.CONTEXT_APPLICATION, item.icon)
         if icoPath is None:
@@ -123,7 +126,12 @@ class MixerWindow(QWidget):
         pass
 
     def input_removed(self, id):
+        #print("Input removed")
+        inp = self.inputs[id]
+        res = self.inputLayout.removeWidget(inp)
+        sip.delete(inp)
         del self.inputs[id]
+        self.redoGeom()
 
 class TrayIcon(QSystemTrayIcon):
 

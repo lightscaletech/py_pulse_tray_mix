@@ -2,7 +2,6 @@ from py_pulse_tray_mixer import lib_pulseaudio as pa
 from PyQt5.QtCore import QThread, QMutex, QObject, pyqtSignal, pyqtSlot
 import ctypes as c
 
-
 class PObj(QObject):
     def __init__(self, info):
         QObject.__init__(self, None)
