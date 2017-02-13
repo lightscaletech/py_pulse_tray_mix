@@ -101,13 +101,15 @@ class MixerWindow(QWidget):
     def new_item(self, container, layout, item, iconCtx):
         s = slider.Slider(self)
         s.shown.connect(self.redoGeom)
+        s.title.setText(item.title)
+        s.control.setValue(item.volume)
         icoPath = self.icoFinder.find_icon(iconCtx, item.icon)
         if icoPath is None:
             icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
         s.setIcon(icoPath)
-        s.title.setText(item.title)
         container[item.index] = s
         layout.addWidget(s)
+        return s
 
     def remove_item(self, container, layout, index):
         inp = container[index]
