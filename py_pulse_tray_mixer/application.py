@@ -2,7 +2,7 @@ import os
 import sip
 from PyQt5 import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
+from PyQt5.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,QSizePolicy,
                              QDesktopWidget, QHBoxLayout)
 from py_pulse_tray_mixer import slider
 from py_pulse_tray_mixer import pulse
@@ -16,6 +16,7 @@ class Application(QApplication):
         self.paMl = pulse.PulseMainloop(self)
         self.pa = pulse.Pulse(self.paMl)
         self.mixWin = MixerWindow(self.paMl, self.pa, self.trayIcon)
+        self.setQuitOnLastWindowClosed(False)
 
         self.trayIcon.activated.connect(self.mixWin.toggle)
 
@@ -37,6 +38,8 @@ class MixerWindow(QWidget):
         self.setWindowTitle("Mixer")
         self.icoFinder = icon.IconFinder([icon.CONTEXT_APPLICATION,
                                           icon.CONTEXT_DEVICE])
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum,
+                                       QSizePolicy.Expanding))
 
         contype = Qt.Qt.BlockingQueuedConnection
         pa.input_manager.added.connect(self.input_new, type=contype)
@@ -59,12 +62,14 @@ class MixerWindow(QWidget):
         self.redoGeom()
 
     def redoGeom(self):
-        self.resize()
+        self.widg_resize()
         self.reposition()
 
-    def resize(self):
+    def widg_resize(self):
         self.setMaximumHeight(300)
         self.setMinimumHeight(300)
+        QApplication.processEvents()
+        self.resize(0,0)
         self.updateGeometry()
 
     def reposition(self):
