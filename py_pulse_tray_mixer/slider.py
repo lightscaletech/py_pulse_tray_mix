@@ -3,6 +3,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QWidget, QLabel, QSlider, QPushButton,
                              QHBoxLayout, QVBoxLayout)
+from py_pulse_tray_mixer import pulse
 
 class Slider(QWidget):
 
@@ -26,6 +27,8 @@ class Slider(QWidget):
 
         layout.addLayout(botLayout)
         self.setLayout(layout)
+        self.control.setMinimum(pulse.VOLUME_MIN)
+        self.control.setMaximum(pulse.VOLUME_NORM)
 
     def setIcon(self, p):
         pix = QPixmap(p)
