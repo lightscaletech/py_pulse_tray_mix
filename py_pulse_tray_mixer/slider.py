@@ -1,5 +1,6 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QWidget, QLabel, QSlider, QPushButton,
                              QHBoxLayout, QVBoxLayout)
 
@@ -25,6 +26,10 @@ class Slider(QWidget):
 
         layout.addLayout(botLayout)
         self.setLayout(layout)
+
+    def setIcon(self, p):
+        pix = QPixmap(p)
+        self.icon.setPixmap(pix)
 
     def showEvent(self, event):
         self.shown.emit()
