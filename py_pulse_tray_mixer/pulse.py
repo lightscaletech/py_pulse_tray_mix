@@ -227,17 +227,20 @@ class Pulse(QObject):
     def _del__(self):
         pa.pa_context_disconnect(self._pa_ctx)
 
+    @pyqtSlot(int, bool)
     def setSinkMute(self, index, val):
         pa.pa_context_set_sink_mute_by_index(self._pa_ctx, index, int(val),
-                                             self._c_ctx_sub_success)
+                                             self._c_ctx_sub_success, None)
 
-    def setSinkVolume(self):
+    @pyqtSlot(int, int)
+    def setSinkVolume(self, index, index):
         pass
 
+    @pyqtSlot(int, bool)
     def setInputMute(self, index, val):
-        pa.pa_context_set_sink_input_mute_by_index(self._pa_ctx,
-                                                   index, int(val),
-                                                   self._c_ctx_sub_success)
+        pa.pa_context_set_sink_input_mute(self._pa_ctx, index, int(val),
+                                          self._c_ctx_sub_success, None)
 
-    def setInputVolume(self):
+    @pyqtSlot(int, int)
+    def setInputVolume(self, index, val):
         pass
