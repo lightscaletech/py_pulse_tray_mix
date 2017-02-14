@@ -8,8 +8,8 @@ from py_pulse_tray_mixer import pulse
 class Slider(QWidget):
 
     shown = pyqtSignal()
-    mute = pyqtSignal()
-    volumeChange = pyqtSignal()
+    mute = pyqtSignal(bool)
+    volumeChange = pyqtSignal(int)
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -20,7 +20,7 @@ class Slider(QWidget):
         self.muteBtn = QPushButton('M', self)
         self.muteBtn.setMaximumWidth(20)
         self.muteBtn.setCheckable(True)
-        self.muteBtn.clicked(self.mute.emit)
+        self.muteBtn.clicked.connect(self.mute.emit)
 
         layout = QVBoxLayout()
         layout.addWidget(self.icon)

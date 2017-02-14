@@ -98,12 +98,23 @@ class MixerWindow(QWidget):
             self.show()
             self.redoGeom()
 
+    @staticmethod
+    def mk_slider_change_slot(index, cb):
+        return lambda value, func=cb: cb(index, value)
+
     def new_item(self, container, layout, item, iconCtx):
+        index = item.index
         s = slider.Slider(self)
         s.shown.connect(self.redoGeom)
         s.title.setText(item.title)
         s.setVolume(item.volume)
         s.setMuted(item.mute)
+
+        s.mute.connect(
+            self.mk_slider_change_slot(index, self.sliderMuteSet))
+        s.volumeChange.connect(
+            self.mk_slider_change_slot(index, self.sliderVolumeSet))
+
         icoPath = self.icoFinder.find_icon(iconCtx, item.icon)
         if icoPath is None:
             icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
@@ -111,6 +122,12 @@ class MixerWindow(QWidget):
         container[item.index] = s
         layout.addWidget(s)
         return s
+
+    def sliderMuteSet(self, index, val):
+        print("item: %i  value: %s" % (index, val))
+
+    def sliderVolumeSet(self, index, val):
+        print("item: %i  value: %i" % (index, val))
 
     def remove_item(self, container, layout, index):
         inp = container[index]
