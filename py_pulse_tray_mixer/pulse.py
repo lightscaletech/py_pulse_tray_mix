@@ -224,6 +224,17 @@ class Pulse(QObject):
         pa.pa_context_set_event_callback(self._pa_ctx, self._c_ctx_event, None)
         pa.pa_context_set_state_callback(self._pa_ctx, self._c_ctx_state, None)
 
-
     def _del__(self):
         pa.pa_context_disconnect(self._pa_ctx)
+
+    def setSinkMute(self):
+        pass
+
+    def setSinkVolume(self):
+        pass
+
+    def setInputMute(self):
+        pass
+
+    def setInputVolume(self):
+        pass
