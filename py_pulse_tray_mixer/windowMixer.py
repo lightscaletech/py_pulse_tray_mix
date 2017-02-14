@@ -91,11 +91,6 @@ class MixerWindow(QWidget):
         s.setVolume(item.volume)
         s.setMuted(item.mute)
 
-        s.mute.connect(
-            self.mk_slider_change_slot(index, self.sliderMuteSet))
-        s.volumeChange.connect(
-            self.mk_slider_change_slot(index, self.sliderVolumeSet))
-
         icoPath = self.icoFinder.find_icon(iconCtx, item.icon)
         if icoPath is None:
             icoPath = self.icoFinder.find_icon(icon.CONTEXT_DEVICE, 'audio-card')
@@ -104,10 +99,16 @@ class MixerWindow(QWidget):
         layout.addWidget(s)
         return s
 
-    def sliderMuteSet(self, index, val):
+    def sinkSliderMuteSet(self, index, val):
         print("item: %i  value: %s" % (index, val))
 
-    def sliderVolumeSet(self, index, val):
+    def sinkSliderVolumeSet(self, index, val):
+        print("item: %i  value: %i" % (index, val))
+
+    def inputSliderMuteSet(self, index, val):
+        print("item: %i  value: %s" % (index, val))
+
+    def inputSliderVolumeSet(self, index, val):
         print("item: %i  value: %i" % (index, val))
 
     def remove_item(self, container, layout, index):
@@ -122,7 +123,13 @@ class MixerWindow(QWidget):
         container[item.index].setMuted(item.mute)
 
     def sink_new(self, item):
-        self.new_item(self.sinks, self.sinkLayout, item, icon.CONTEXT_DEVICE)
+        s = self.new_item(self.sinks, self.sinkLayout, item,
+                          icon.CONTEXT_DEVICE)
+
+        s.mute.connect(
+            self.mk_slider_change_slot(index, self.sinkSliderMuteSet))
+        s.volumeChange.connect(
+            self.mk_slider_change_slot(index, self.sinkSliderVolumeSet))
 
     def sink_update(self, item): self.update_item(self.sinks, item)
 
@@ -130,8 +137,14 @@ class MixerWindow(QWidget):
         self.remove_item(self.sinks, self.sinkLayout, index)
 
     def input_new(self, item):
-        self.new_item(self.inputs, self.inputLayout, item,
-                      icon.CONTEXT_APPLICATION)
+        s = self.new_item(self.inputs, self.inputLayout, item,
+                          icon.CONTEXT_APPLICATION)
+
+        s.mute.connect(
+            self.mk_slider_change_slot(index, self.inputSliderMuteSet))
+        s.volumeChange.connect(
+            self.mk_slider_change_slot(index, self.inputSliderVolumeSet))
+
 
     def input_update(self, item): self.update_item(self.inputs, item)
 
