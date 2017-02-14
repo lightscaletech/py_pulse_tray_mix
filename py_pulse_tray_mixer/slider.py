@@ -38,3 +38,6 @@ class Slider(QWidget):
 
     def showEvent(self, event):
         self.shown.emit()
+
+    def setVolume(self, val): self.control.setValue(val)
+    def setMuted(self, val): self.muteBtn.setChecked(val)
