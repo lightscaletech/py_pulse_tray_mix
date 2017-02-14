@@ -1,8 +1,8 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (QWidget, QLabel, QSlider, QPushButton,
-                             QHBoxLayout, QVBoxLayout)
+from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QSlider,
+                             QPushButton, QHBoxLayout, QVBoxLayout)
 from py_pulse_tray_mixer import pulse
 
 class Slider(QWidget):
@@ -13,8 +13,16 @@ class Slider(QWidget):
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
+
+        self.volMouseDown = False
+
         self.control = QSlider(Qt.Vertical, self)
-        self.control.valueChanged.connect(self.volumeChange.emit)
+        self.control.valueChanged.connect(
+            lambda val, fun=self.volumeChange.emit:
+            self.volMouseDown and fun(val))
+        self.control.sliderPressed.connect(self.volumeMouseDown)
+        self.control.sliderReleased.connect(self.volumeMouseUp)
+
         self.icon = QLabel('Icon', self)
         self.title = QLabel('Title', self)
         self.muteBtn = QPushButton('M', self)
@@ -43,5 +51,16 @@ class Slider(QWidget):
     def showEvent(self, event):
         self.shown.emit()
 
-    def setVolume(self, val): self.control.setValue(val)
+    def volumeMouseDown(self):
+        QApplication.processEvents()
+        self.volMouseDown = True
+
+    def volumeMouseUp(self):
+        QApplication.processEvents()
+        self.volMouseDown = False
+
+    def setVolume(self, val):
+        if self.volMouseDown == False:
+            self.control.setValue(val)
+
     def setMuted(self, val): self.muteBtn.setChecked(val)
