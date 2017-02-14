@@ -84,7 +84,6 @@ class MixerWindow(QWidget):
         return lambda value, func=cb: cb(index, value)
 
     def new_item(self, container, layout, item, iconCtx):
-        index = item.index
         s = slider.Slider(self)
         s.shown.connect(self.redoGeom)
         s.title.setText(item.title)
@@ -123,6 +122,7 @@ class MixerWindow(QWidget):
         container[item.index].setMuted(item.mute)
 
     def sink_new(self, item):
+        index = item.index
         s = self.new_item(self.sinks, self.sinkLayout, item,
                           icon.CONTEXT_DEVICE)
 
@@ -137,6 +137,7 @@ class MixerWindow(QWidget):
         self.remove_item(self.sinks, self.sinkLayout, index)
 
     def input_new(self, item):
+        index = item.index
         s = self.new_item(self.inputs, self.inputLayout, item,
                           icon.CONTEXT_APPLICATION)
 
