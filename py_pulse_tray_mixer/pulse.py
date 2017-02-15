@@ -141,22 +141,51 @@ class PulseMainloop(QObject):
         print("Starting")
         self.go.emit()
 
+class EventCounter(QObject):
+    def __init__(self, parent = None):
+        QObject.__init__(self, parent)
+        self.cLock = QMutex()
+        self.c = 0
+
+    def __del__(self):
+        del self.cLock
+
+    def up(self):
+        self.cLock.lock()
+        self.c += 1
+        self.cLock.unlock()
+
+    def get(self):
+        self.cLock.lock()
+        v = self.c
+        self.cLock.unlock()
+        return v
+
+    def down(self):
+        self.cLock.lock()
+        self.c -= 1
+        self.cLock.unlock()
+
+    def checkAndDown(self):
+        self.cLock.lock()
+        res = bool(self.c)
+        if res: self.c -= 1
+        self.cLock.unlock()
+        return not res
+
 class Pulse(QObject):
 
     sink_manager = Manager()
     input_manager = Manager()
 
+    inputEvCounter = EventCounter()
+
     _pa_ctx = None
 
     @staticmethod
     def _upsert_manage(t, manager, i):
-        info = None
-        try:
-            info = i.contents
-        except: pass
-        if info is None: return
-
-        manager.upsert_item(t(info))
+        if bool(i) is False: return
+        manager.upsert_item(t(i.contents))
 
     def _sink_info(self, ctx, sink_info, eol, ud):
         self._upsert_manage(Sink, self.sink_manager, sink_info)
