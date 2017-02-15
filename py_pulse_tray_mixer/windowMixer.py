@@ -16,6 +16,7 @@ class MixerWindow(QWidget):
         QWidget.__init__(self, parent, Qt.Qt.Dialog | Qt.Qt.FramelessWindowHint)
         self.trayicon = trayicon
         self.ml = ml
+        self.pa = pa
         self.setWindowTitle("Mixer")
         self.icoFinder = icon.IconFinder([icon.CONTEXT_APPLICATION,
                                           icon.CONTEXT_DEVICE])
@@ -115,9 +116,9 @@ class MixerWindow(QWidget):
                           icon.CONTEXT_DEVICE)
 
         s.mute.connect(
-            self.mk_slider_change_slot(index, self.sinkSliderMuteSet))
+            self.mk_slider_change_slot(index, self.pa.setSinkMute))
         s.volumeChange.connect(
-            self.mk_slider_change_slot(index, self.sinkSliderVolumeSet))
+            self.mk_slider_change_slot(index, self.pa.setSinkVolume))
 
     def sink_update(self, item): self.update_item(self.sinks, item)
 
@@ -130,12 +131,12 @@ class MixerWindow(QWidget):
                           icon.CONTEXT_APPLICATION)
 
         s.mute.connect(
-            self.mk_slider_change_slot(index, self.inputSliderMuteSet))
+            self.mk_slider_change_slot(index, self.pa.setInputMute))
         s.volumeChange.connect(
-            self.mk_slider_change_slot(index, self.inputSliderVolumeSet))
+            self.mk_slider_change_slot(index, self.pa.setInputVolume))
 
-
-    def input_update(self, item): self.update_item(self.inputs, item)
+    def input_update(self, item):
+        self.update_item(self.inputs, item)
 
     def input_removed(self, index):
         self.remove_item(self.inputs, self.inputLayout, index)
