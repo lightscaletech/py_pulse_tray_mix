@@ -98,18 +98,6 @@ class MixerWindow(QWidget):
         layout.addWidget(s)
         return s
 
-    def sinkSliderMuteSet(self, index, val):
-        print("item: %i  value: %s" % (index, val))
-
-    def sinkSliderVolumeSet(self, index, val):
-        print("item: %i  value: %i" % (index, val))
-
-    def inputSliderMuteSet(self, index, val):
-        print("item: %i  value: %s" % (index, val))
-
-    def inputSliderVolumeSet(self, index, val):
-        print("item: %i  value: %i" % (index, val))
-
     def remove_item(self, container, layout, index):
         inp = container[index]
         res = self.inputLayout.removeWidget(inp)
