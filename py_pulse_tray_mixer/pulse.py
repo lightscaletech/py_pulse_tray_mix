@@ -206,7 +206,8 @@ class Pulse(QObject):
         if(evfac == pa.PA_SUBSCRIPTION_EVENT_SINK_INPUT):
             if evtype == pa.PA_SUBSCRIPTION_EVENT_REMOVE:
                 self.input_manager.remove_item(eid)
-            else: self._request_input_state(ctx, eid, evtype)
+            elif self.inputEvCounter.checkAndDown():
+                self._request_input_state(ctx, eid, evtype)
 
     def _ctx_event(self, ctx, name, prop_list, ud): print("Context event")
 
@@ -256,13 +257,19 @@ class Pulse(QObject):
     def _del__(self):
         pa.pa_context_disconnect(self._pa_ctx)
 
+    @staticmethod
+    def createVolume(val):
+        vol = pa.pa_cvolume()
+        vol = pa.pa_cvolume_init(vol)
+        return pa.pa_cvolume_set(vol, 2, val)
+
     @pyqtSlot(int, bool)
     def setSinkMute(self, index, val):
         pa.pa_context_set_sink_mute_by_index(self._pa_ctx, index, int(val),
                                              self._c_ctx_sub_success, None)
 
     @pyqtSlot(int, int)
-    def setSinkVolume(self, index, index):
+    def setSinkVolume(self, index, val):
         pass
 
     @pyqtSlot(int, bool)
@@ -272,4 +279,7 @@ class Pulse(QObject):
 
     @pyqtSlot(int, int)
     def setInputVolume(self, index, val):
-        pass
+        self.inputEvCounter.up()
+        pa.pa_context_set_sink_input_volume(self._pa_ctx, index,
+                                            self.createVolume(val),
+                                            self._c_ctx_sub_success, None)
